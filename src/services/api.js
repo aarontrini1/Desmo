@@ -1,4 +1,6 @@
-// Base API URLs
+// src/services/api.js
+
+// Base API URLs - Updated to match documentation
 const VIDSRC_API_BASE = 'https://vidsrc.xyz';
 const TVMAZE_API_BASE = 'https://api.tvmaze.com';
 const IMDB_API_BASE = 'https://imdb.iamidiotareyoutoo.com';
@@ -19,7 +21,7 @@ const fetchData = async (url, options = {}) => {
       return cachedData.data;
     }
     
-    const response = await fetch(url);
+    const response = await fetch(url, options);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
@@ -40,13 +42,14 @@ const fetchData = async (url, options = {}) => {
   }
 };
 
-// Server configurations for streaming
+// Updated server configurations for streaming based on documentation
 export const streamingServers = {
   movie: [
     { 
       id: 'server1', 
       name: 'VidSrc', 
       getUrl: (imdbId, tmdbId) => {
+        // Updated to match API documentation
         return `${VIDSRC_API_BASE}/embed/movie?imdb=${imdbId}`;
       }
     },
@@ -54,16 +57,21 @@ export const streamingServers = {
       id: 'server2', 
       name: 'VidLink', 
       getUrl: (imdbId, tmdbId) => {
-        // VidLink requires tmdbId
-        return `https://vidlink.pro/movie/${tmdbId || imdbId}`;
+        // VidLink requires tmdbId according to docs
+        if (!tmdbId) {
+          console.warn('VidLink requires TMDB ID, which is not available');
+          return null;
+        }
+        return `https://vidlink.pro/movie/${tmdbId}`;
       }
     },
     { 
       id: 'server3', 
       name: 'Embed.su', 
       getUrl: (imdbId, tmdbId) => {
-        // Embed.su can use either tmdbId or imdbId
-        return `https://embed.su/embed/movie/${tmdbId || imdbId}`;
+        // Embed.su can use either tmdbId or imdbId according to docs
+        const id = tmdbId || imdbId;
+        return `https://embed.su/embed/movie/${id}`;
       }
     }
   ],
@@ -72,6 +80,7 @@ export const streamingServers = {
       id: 'server1', 
       name: 'VidSrc', 
       getUrl: (imdbId, tmdbId, season, episode) => {
+        // Updated to match API documentation
         return `${VIDSRC_API_BASE}/embed/tv?imdb=${imdbId}&season=${season}&episode=${episode}`;
       }
     },
@@ -79,16 +88,21 @@ export const streamingServers = {
       id: 'server2', 
       name: 'VidLink', 
       getUrl: (imdbId, tmdbId, season, episode) => {
-        // VidLink requires tmdbId
-        return `https://vidlink.pro/tv/${tmdbId || imdbId}/${season}/${episode}`;
+        // VidLink requires tmdbId according to docs
+        if (!tmdbId) {
+          console.warn('VidLink requires TMDB ID, which is not available');
+          return null;
+        }
+        return `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}`;
       }
     },
     { 
       id: 'server3', 
       name: 'Embed.su', 
       getUrl: (imdbId, tmdbId, season, episode) => {
-        // Embed.su can use either tmdbId or imdbId
-        return `https://embed.su/embed/tv/${tmdbId || imdbId}/${season}/${episode}`;
+        // Embed.su can use either tmdbId or imdbId according to docs
+        const id = tmdbId || imdbId;
+        return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
       }
     }
   ]

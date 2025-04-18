@@ -1,3 +1,4 @@
+// src/components/tvshows/EpisodePlayerPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, getTVShowDetails, getSeasonEpisodes } from '../../services/tvShowService';
@@ -27,6 +28,11 @@ const EpisodePlayerPage = ({ tvShows }) => {
         
         // Get episode details
         const episodeData = await getEpisode(id, season, episodeNum);
+        if (!episodeData) {
+          setError("Episode not found");
+          setLoading(false);
+          return;
+        }
         setEpisode(episodeData);
         
         // Get TV show details
@@ -72,7 +78,15 @@ const EpisodePlayerPage = ({ tvShows }) => {
   const handleWatchNow = () => {
     const server = servers.find(s => s.id === selectedServer);
     if (server) {
+      // Get the URL for this server
       const url = server.getUrl(id, tvShow?.tmdb_id || id, season, episodeNum);
+      
+      // Check if the URL is valid (some servers may require TMDB ID)
+      if (!url) {
+        setError(`The selected server requires a TMDB ID, which is not available for this TV Show.`);
+        return;
+      }
+      
       console.log(`Opening URL: ${url}`);
       window.open(url, "_blank");
     }
@@ -91,7 +105,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
   
   // HTML parser to clean description from HTML tags
   const createMarkup = (htmlContent) => {
-    return { __html: htmlContent };
+    return { __html: htmlContent || 'No description available.' };
   };
   
   return (
@@ -122,7 +136,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
         
         <div 
           className="episode-summary"
-          dangerouslySetInnerHTML={createMarkup(episode.summary || 'No description available.')}
+          dangerouslySetInnerHTML={createMarkup(episode.summary)}
         />
         
         <div className="server-selection">
@@ -138,6 +152,8 @@ const EpisodePlayerPage = ({ tvShows }) => {
               </button>
             ))}
           </div>
+          
+          {error && <div className="error-message">{error}</div>}
           
           <button 
             onClick={handleWatchNow}

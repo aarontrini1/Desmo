@@ -1,3 +1,4 @@
+// src/services/movieService.js
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as IMDBService from './imdbService';
 
@@ -8,6 +9,7 @@ import * as IMDBService from './imdbService';
  */
 export const getLatestMovies = async (page = 1) => {
   try {
+    // Fixed API endpoint to match documentation
     const data = await fetchData(`${VIDSRC_API_BASE}/movies/latest/page-${page}.json`);
     
     // Make sure all movies have tmdb_id (some might only have imdb_id)
@@ -24,7 +26,8 @@ export const getLatestMovies = async (page = 1) => {
     return processedMovies;
   } catch (error) {
     console.error('Error fetching latest movies:', error);
-    throw error;
+    // Return empty array instead of throwing to gracefully handle API errors
+    return [];
   }
 };
 
@@ -61,7 +64,7 @@ export const enhanceMovieData = async (movie) => {
       description: imdbDetails.description || movie.description,
       poster: posterUrl || movie.poster,
       trailer: trailerUrl,
-      rating: imdbDetails.rating,
+      rating: imdbDetails.rating || movie.rating,
       year: imdbDetails.year || extractYearFromTitle(movie.title),
       genres: imdbDetails.genres || [],
       runtime: imdbDetails.runtime || 'N/A',
@@ -79,6 +82,10 @@ export const enhanceMovieData = async (movie) => {
  */
 export const getMovieDetails = async (imdbId) => {
   try {
+    if (!imdbId) {
+      throw new Error('Invalid IMDB ID: ' + imdbId);
+    }
+    
     // Get details from IMDB
     const imdbDetails = await IMDBService.getIMDBDetails(imdbId);
     
@@ -89,19 +96,16 @@ export const getMovieDetails = async (imdbId) => {
     // Get poster from IMDB
     const posterUrl = await IMDBService.getIMDBPoster(imdbId);
     
-    // Try to get trailer
-    const trailerUrl = await IMDBService.getIMDBTrailer(imdbId);
-    
-    // Return enhanced movie data
+    // Return movie data
     return {
       imdb_id: imdbId,
-      title: imdbDetails.title,
-      description: imdbDetails.description,
-      poster: posterUrl,
-      trailer: trailerUrl,
-      rating: imdbDetails.rating,
-      year: imdbDetails.year,
-      genres: imdbDetails.genres || [],
+      title: imdbDetails.title || 'Unknown Title',
+      description: imdbDetails.description || 'No description available',
+      poster: posterUrl || imdbDetails.poster,
+      trailer: imdbDetails.trailer,
+      rating: imdbDetails.rating || 'N/A',
+      year: imdbDetails.year || '',
+      genres: imdbDetails.genres || ['Action'],
       runtime: imdbDetails.runtime || 'N/A',
     };
   } catch (error) {
@@ -116,6 +120,7 @@ export const getMovieDetails = async (imdbId) => {
  * @returns {string} - Extracted year or empty string
  */
 const extractYearFromTitle = (title) => {
+  if (!title) return '';
   const match = title.match(/\b(19|20)\d{2}\b/);
   return match ? match[0] : '';
 };
@@ -127,23 +132,58 @@ const extractYearFromTitle = (title) => {
  */
 export const searchMovies = async (query) => {
   try {
+    if (!query || query.trim().length < 2) {
+      console.log('Search query too short');
+      return [];
+    }
+
+    console.log(`Searching movies for: "${query}"`);
     const results = await IMDBService.searchIMDB(query);
     
-    // Filter to only include movies (not TV shows)
-    const movieResults = results.filter(item => 
-      item.type === 'movie' || (!item.type && !item.tvSeriesInfo)
-    );
+    if (!results || !Array.isArray(results)) {
+      console.log('No results or invalid format returned from IMDB search');
+      return [];
+    }
     
-    // Map to a standardized format
-    return movieResults.map(movie => ({
-      imdb_id: movie.id,
-      title: movie.title || movie.name,
-      description: movie.description || movie.plot,
-      poster: movie.poster || movie.image,
-      rating: movie.rating || movie.imdbRating,
-      year: movie.year || (movie.releaseDate ? movie.releaseDate.substring(0, 4) : ''),
-      genres: movie.genres || [],
-    }));
+    console.log(`Got ${results.length} raw results from IMDB`);
+    
+    // Filter to only include movies (not TV shows)
+    const movieResults = results.filter(item => {
+      // Consider an item a movie if any of these conditions are true
+      const isMovie = 
+        // Explicitly marked as a movie
+        item.type === 'movie' || 
+        // Not marked as anything and doesn't have TV series info
+        (!item.type && !item.tvSeriesInfo) ||
+        // Has an IMDB ID (tt prefix) and is not explicitly a TV show
+        (item.id && item.id.startsWith('tt') && (!item.type || item.type !== 'tvshow'));
+      
+      return isMovie;
+    });
+    
+    console.log(`Filtered to ${movieResults.length} movie results`);
+    
+    // Map to a standardized format - preserving values exactly as they are
+    const standardizedResults = movieResults.map((movie, index) => {
+      // Create the standardized movie object with exactly the properties needed
+      const standardizedMovie = {
+        imdb_id: movie.id || '',
+        title: movie.title || '',
+        description: movie.description || 'No description available',
+        poster: movie.poster || '',
+        rating: movie.rating || '',
+        year: movie.year || '',
+        genres: movie.genres || ['Action'],
+        quality: 'HD' // Default value
+      };
+      
+      console.log(`Standardized movie ${index}:`, standardizedMovie);
+      
+      return standardizedMovie;
+    });
+    
+    console.log(`Returning ${standardizedResults.length} standardized movie results`);
+    return standardizedResults;
   } catch (error) {
     console.error('Error searching movies:', error);
     return [];

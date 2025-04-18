@@ -1,3 +1,4 @@
+// src/components/movies/MovieDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
@@ -78,7 +79,15 @@ const MovieDetailPage = ({ movies }) => {
   const handleWatchNow = () => {
     const server = servers.find(s => s.id === selectedServer);
     if (server) {
-      const url = server.getUrl(id, movie?.tmdb_id || id);
+      // Get the URL for the selected server
+      const url = server.getUrl(id, displayData?.tmdb_id || id);
+      
+      // Check if the URL is valid
+      if (!url) {
+        setError(`The selected server requires a TMDB ID, which is not available for this movie.`);
+        return;
+      }
+      
       console.log(`Opening URL: ${url}`);
       window.open(url, "_blank");
     }
@@ -110,19 +119,19 @@ const MovieDetailPage = ({ movies }) => {
               <h1>{titleWithoutYear}</h1>
               <div className="content-meta">
                 {year && <span className="year">{year}</span>}
-                {movie?.quality && <span className="quality">{movie.quality}</span>}
-                {displayData.rating && (
+                {displayData?.quality && <span className="quality">{displayData.quality}</span>}
+                {displayData?.rating && (
                   <span className="rating">⭐ {displayData.rating}</span>
                 )}
-                {displayData.runtime && (
+                {displayData?.runtime && (
                   <span className="duration">{displayData.runtime}</span>
                 )}
               </div>
               
               {displayData.genres && displayData.genres.length > 0 && (
                 <div className="genres">
-                  {displayData.genres.map(genre => (
-                    <span key={genre} className="genre-tag">{genre}</span>
+                  {displayData.genres.map((genre, index) => (
+                    <span key={`${genre}-${index}`} className="genre-tag">{genre}</span>
                   ))}
                 </div>
               )}
@@ -153,6 +162,8 @@ const MovieDetailPage = ({ movies }) => {
                     </button>
                   ))}
                 </div>
+                
+                {error && <div className="error-message">{error}</div>}
                 
                 <button 
                   onClick={handleWatchNow}

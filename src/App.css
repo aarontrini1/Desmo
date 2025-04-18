@@ -1118,3 +1118,183 @@ main {
     justify-content: center;
   }
 }
+
+.error-message {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+  padding: 0.8rem;
+  margin: 0.8rem 0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Improved server button styles */
+.server-button {
+  padding: 0.8rem 1.5rem;
+  background-color: #2a2a2a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.server-button:hover {
+  background-color: #3a3a3a;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.server-button.active {
+  background-color: #444;
+  border: 2px solid #00e676;
+  padding: calc(0.8rem - 2px) calc(1.5rem - 2px);
+}
+
+.server-button.active::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #00e676;
+  border-radius: 50%;
+  top: 6px;
+  right: 6px;
+}
+
+/* Enhanced watch-now button */
+.watch-now-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background-color: #00e676;
+  color: #121212;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 1rem;
+}
+
+.watch-now-button:hover {
+  background-color: #00c853;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3);
+}
+
+.watch-now-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 230, 118, 0.2);
+}
+
+.play-icon {
+  font-size: 1.2rem;
+  margin-top: -2px;
+}
+
+/* Better content card hover effects */
+.content-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+  opacity: 0.95;
+}
+
+.content-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  opacity: 1;
+}
+
+.content-card .content-poster::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-card:hover .content-poster::after {
+  opacity: 1;
+}
+
+.content-card:hover .quick-play-overlay {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.content-card:hover .play-button {
+  transform: scale(1.2);
+}
+
+/* Additional mobile responsiveness */
+@media (max-width: 768px) {
+  .detail-backdrop {
+    padding: 1.5rem;
+  }
+
+  .detail-poster {
+    width: 160px;
+    height: 240px;
+  }
+
+  .detail-info h1 {
+    font-size: 1.5rem;
+  }
+
+  .server-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .server-button {
+    flex: 1 0 40%;
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .episode-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-button {
+    width: 100%;
+  }
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #fff;
+  }
+
+  .content-card {
+    background-color: #1e1e1e;
+  }
+
+  .server-button {
+    background-color: #2a2a2a;
+  }
+
+  .server-button:hover {
+    background-color: #3a3a3a;
+  }
+
+  .watch-now-button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+}

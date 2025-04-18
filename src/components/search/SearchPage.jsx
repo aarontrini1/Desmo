@@ -1,7 +1,8 @@
+// src/components/search/SearchPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ContentCard from '../shared/ContentCard';
-import { searchIMDB } from '../../services/imdbService';
+import { searchMovies } from '../../services/movieService';
 import { searchTVShows } from '../../services/tvShowService';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
@@ -19,74 +20,64 @@ const SearchPage = () => {
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'movies', 'tvshows'
   
+  // Perform search when query changes
   useEffect(() => {
     if (!query || query.length < 2) return; // Require at least 2 characters
     
+    const performSearch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log(`Searching for: "${query}"`);
+        
+        // Search both APIs in parallel
+        const [moviesData, tvShowsData] = await Promise.all([
+          searchMovies(query),
+          searchTVShows(query)
+        ]);
+        
+        console.log('Movie search results:', moviesData?.length || 0);
+        console.log('TV show search results:', tvShowsData?.length || 0);
+        
+        // Make sure IDs are present
+        const processedMovies = (moviesData || []).map((movie, index) => {
+          if (!movie.imdb_id && !movie.id) {
+            // If no ID is present, add a random one to avoid display issues
+            movie.id = `movie-${index}-${Date.now()}`;
+          }
+          return movie;
+        });
+        
+        const processedTVShows = (tvShowsData || []).map((show, index) => {
+          if (!show.imdb_id && !show.id) {
+            // If no ID is present, add a random one to avoid display issues
+            show.id = `tvshow-${index}-${Date.now()}`;
+          }
+          return show;
+        });
+        
+        // Update the search results
+        setSearchResults({
+          movies: processedMovies,
+          tvShows: processedTVShows
+        });
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Search error:', error);
+        setError('Failed to complete search. Please try again.');
+        setLoading(false);
+      }
+    };
+    
+    // Add a small delay before searching
     const searchTimeout = setTimeout(() => {
-      performSearch(query);
-    }, 300); // 300ms delay before searching
+      performSearch();
+    }, 300);
     
     return () => clearTimeout(searchTimeout);
   }, [query]);
-  
-  const performSearch = async (searchQuery) => {
-    try {
-      setLoading(true);
-      
-      // Search both APIs in parallel
-      const [imdbResults, tvMazeResults] = await Promise.allSettled([
-        searchIMDB(searchQuery),
-        searchTVShows(searchQuery)
-      ]);
-      
-      // Process IMDB results
-      let movieResults = [];
-      if (imdbResults.status === 'fulfilled') {
-        // Filter to only include movies (not TV shows)
-        movieResults = imdbResults.value
-          .filter(item => 
-            item.type === 'movie' || (!item.type && !item.tvSeriesInfo)
-          )
-          .map(movie => ({
-            imdb_id: movie.id,
-            title: movie.title || movie.name,
-            description: movie.description || movie.plot,
-            poster: movie.poster || movie.image,
-            rating: movie.rating || movie.imdbRating,
-            year: movie.year || (movie.releaseDate ? movie.releaseDate.substring(0, 4) : ''),
-            quality: 'HD',
-            genres: movie.genres || []
-          }));
-      }
-      
-      // Process TVMaze results
-      let tvShowResults = [];
-      if (tvMazeResults.status === 'fulfilled') {
-        tvShowResults = tvMazeResults.value.map(show => ({
-          id: show.id,
-          imdb_id: show.imdb_id || `tvmaze-${show.id}`,
-          title: show.title || show.name,
-          description: show.description,
-          poster: show.poster,
-          rating: show.rating,
-          premiered: show.premiered ? show.premiered.substring(0, 4) : '',
-          quality: 'HD',
-          genres: show.genres || []
-        }));
-      }
-      
-      setSearchResults({
-        movies: movieResults,
-        tvShows: tvShowResults
-      });
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Search error:', error);
-      setError('Failed to complete search. Please try again.');
-      setLoading(false);
-    }
-  };
   
   // Filter results based on active filter
   const filteredResults = {
@@ -166,18 +157,19 @@ const SearchPage = () => {
         </div>
       )}
       
+      {/* Movie section */}
       {filteredResults.movies.length > 0 && (
         <section className="search-section">
           <h2>Movies {filteredResults.movies.length > MAX_RESULTS_PER_CATEGORY && 
             `(Showing ${MAX_RESULTS_PER_CATEGORY} of ${filteredResults.movies.length})`}
           </h2>
           <div className="content-grid">
-            {limitedMovies.map(movie => (
+            {limitedMovies.map((movie, index) => (
               <ContentCard 
-                key={movie.imdb_id} 
+                key={movie.imdb_id || movie.id || `movie-${index}-${Date.now()}`} 
                 item={{
                   ...movie,
-                  title: movie.title,
+                  title: movie.title || movie.name || '',
                   quality: movie.quality || 'HD'
                 }} 
                 type="movie" 
@@ -188,18 +180,19 @@ const SearchPage = () => {
         </section>
       )}
       
+      {/* TV Show section */}
       {filteredResults.tvShows.length > 0 && (
         <section className="search-section">
           <h2>TV Shows {filteredResults.tvShows.length > MAX_RESULTS_PER_CATEGORY && 
             `(Showing ${MAX_RESULTS_PER_CATEGORY} of ${filteredResults.tvShows.length})`}
           </h2>
           <div className="content-grid">
-            {limitedTvShows.map(show => (
+            {limitedTvShows.map((show, index) => (
               <ContentCard 
-                key={show.imdb_id || show.id} 
+                key={show.imdb_id || show.id || `tvshow-${index}-${Date.now()}`} 
                 item={{
                   ...show,
-                  title: show.title,
+                  title: show.title || show.name || '',
                   quality: show.quality || 'HD'
                 }} 
                 type="tvshow" 

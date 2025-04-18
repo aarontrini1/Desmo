@@ -1,5 +1,6 @@
+// src/App.jsx
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
 
 // Services
@@ -40,23 +41,45 @@ function App() {
         setLoading(true);
         
         // Fetch movies and TV shows in parallel
-        const [moviesData, tvShowsData] = await Promise.all([
+        const results = await Promise.allSettled([
           getLatestMovies(),
           getLatestTVShows()
         ]);
         
-        // Log the first movie for debugging
-        if (moviesData.length > 0) {
-          console.log('First movie data:', moviesData[0]);
+        // Check for errors and extract values
+        const [moviesResult, tvShowsResult] = results;
+        
+        if (moviesResult.status === 'fulfilled') {
+          const moviesData = moviesResult.value;
+          
+          // Log the first movie for debugging
+          if (moviesData.length > 0) {
+            console.log('First movie data:', moviesData[0]);
+          }
+          
+          setMovies(moviesData);
+        } else {
+          console.error('Error fetching movies:', moviesResult.reason);
         }
         
-        // Log the first TV show for debugging
-        if (tvShowsData.length > 0) {
-          console.log('First TV show data:', tvShowsData[0]);
+        if (tvShowsResult.status === 'fulfilled') {
+          const tvShowsData = tvShowsResult.value;
+          
+          // Log the first TV show for debugging
+          if (tvShowsData.length > 0) {
+            console.log('First TV show data:', tvShowsData[0]);
+          }
+          
+          setTvShows(tvShowsData);
+        } else {
+          console.error('Error fetching TV shows:', tvShowsResult.reason);
         }
         
-        setMovies(moviesData);
-        setTvShows(tvShowsData);
+        // If both failed, set an error
+        if (moviesResult.status === 'rejected' && tvShowsResult.status === 'rejected') {
+          setError('Failed to load content. Please try again later.');
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -68,29 +91,50 @@ function App() {
     fetchContent();
   }, []);
 
-  if (loading) return <Loading />;
-  if (error) return <Error message={error} />;
-
-  return (
-    <Router>
+  // Show loading screen only during initial load
+  if (loading && movies.length === 0 && tvShows.length === 0) {
+    return (
       <div className="app">
         <Header />
-
         <main>
-          <Routes>
-            <Route path="/" element={<HomePage movies={movies} tvShows={tvShows} />} />
-            <Route path="/movies" element={<MoviesPage movies={movies} />} />
-            <Route path="/tvshows" element={<TVShowsPage tvShows={tvShows} />} />
-            <Route path="/movie/:id" element={<MovieDetailPage movies={movies} />} />
-            <Route path="/tvshow/:id" element={<TVShowDetailPage tvShows={tvShows} />} />
-            <Route path="/tvshow/:id/season/:seasonNumber/episode/:episodeNumber" element={<EpisodePlayerPage tvShows={tvShows} />} />
-            <Route path="/search" element={<SearchPage />} />
-          </Routes>
+          <Loading message="Loading content..." />
         </main>
-        
         <Footer />
       </div>
-    </Router>
+    );
+  }
+
+  // Show error screen if there's a critical error
+  if (error && movies.length === 0 && tvShows.length === 0) {
+    return (
+      <div className="app">
+        <Header />
+        <main>
+          <Error message={error} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Header />
+
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage movies={movies} tvShows={tvShows} />} />
+          <Route path="/movies" element={<MoviesPage movies={movies} />} />
+          <Route path="/tvshows" element={<TVShowsPage tvShows={tvShows} />} />
+          <Route path="/movie/:id" element={<MovieDetailPage movies={movies} />} />
+          <Route path="/tvshow/:id" element={<TVShowDetailPage tvShows={tvShows} />} />
+          <Route path="/tvshow/:id/season/:seasonNumber/episode/:episodeNumber" element={<EpisodePlayerPage tvShows={tvShows} />} />
+          <Route path="/search" element={<SearchPage />} />
+        </Routes>
+      </main>
+      
+      <Footer />
+    </div>
   );
 }
 

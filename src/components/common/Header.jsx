@@ -1,3 +1,4 @@
+// src/components/common/Header.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -5,6 +6,8 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isDebouncing, setIsDebouncing] = useState(false);
   
   // Initialize search query from URL if we're on the search page
   useEffect(() => {
@@ -15,6 +18,23 @@ const Header = () => {
       }
     }
   }, [location]);
+  
+  // Handle debounced search updates
+  useEffect(() => {
+    if (!isDebouncing) return;
+    
+    const timer = setTimeout(() => {
+      if (debouncedQuery.trim().length >= 2 && location.pathname === '/search') {
+        // Update URL with the debounced query
+        const params = new URLSearchParams(location.search);
+        params.set('q', debouncedQuery.trim());
+        navigate(`/search?${params.toString()}`, { replace: true });
+      }
+      setIsDebouncing(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [debouncedQuery, isDebouncing, location.pathname, location.search, navigate]);
   
   const handleSearch = (e) => {
     e.preventDefault();
@@ -27,16 +47,10 @@ const Header = () => {
     const newQuery = e.target.value;
     setSearchQuery(newQuery);
     
-    // Auto-search after a short delay when typing
+    // Set up debounced search
     if (newQuery.trim().length >= 2) {
-      // If already on search page, update URL with debounce
-      if (location.pathname === '/search') {
-        const params = new URLSearchParams(location.search);
-        params.set('q', newQuery.trim());
-        
-        // Use replace to avoid filling browser history with each keystroke
-        navigate(`/search?${params.toString()}`, { replace: true });
-      }
+      setDebouncedQuery(newQuery);
+      setIsDebouncing(true);
     }
   };
   

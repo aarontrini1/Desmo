@@ -1,3 +1,4 @@
+// src/components/tvshows/TVShowDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
@@ -158,8 +159,8 @@ const TVShowDetailPage = ({ tvShows }) => {
               
               {displayData.genres && displayData.genres.length > 0 && (
                 <div className="genres">
-                  {displayData.genres.map(genre => (
-                    <span key={genre} className="genre-tag">{genre}</span>
+                  {displayData.genres.map((genre, index) => (
+                    <span key={`${genre}-${index}`} className="genre-tag">{genre}</span>
                   ))}
                 </div>
               )}
@@ -187,12 +188,10 @@ const TVShowDetailPage = ({ tvShows }) => {
         
         {loading ? (
           <div className="episodes-loading">
-            <p>Loading episodes...</p>
+            <Loading message="Loading episodes..." />
           </div>
         ) : error ? (
-          <div className="episodes-error">
-            <p>{error}</p>
-          </div>
+          <Error message={error} />
         ) : episodes.length > 0 ? (
           <div className="episodes-list">
             {episodes.map(episode => (

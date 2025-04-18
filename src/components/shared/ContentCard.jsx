@@ -1,3 +1,4 @@
+// src/components/shared/ContentCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
@@ -23,16 +24,23 @@ const ContentCard = ({
 }) => {
   // Handle case when item is null or undefined
   if (!item) {
+    console.warn('ContentCard: Received null or undefined item');
     return null;
   }
   
-  // Get IMDB ID
-  const imdbId = item.imdb_id || item.id;
+  // Get IMDB ID with fallbacks
+  const imdbId = item.imdb_id || item.id || item.imdbID || '';
   
   if (!imdbId) {
     console.warn('ContentCard: Missing IMDB ID', item);
-    return null;
+    // We'll generate a random ID for display purposes when none exists
+    // This prevents failing to display valid content just because it lacks an ID
+    const randomId = `temp-${Math.random().toString(36).substring(2, 15)}`;
+    item.temp_id = randomId;
   }
+  
+  // Use the ID with fallback to temporary ID
+  const contentId = imdbId || item.temp_id;
   
   // Get title
   const title = item.title || item.name || '';
@@ -41,7 +49,7 @@ const ContentCard = ({
   const placeholderColor = generatePlaceholderColor(title);
   
   // Extract year from title or use provided year property
-  const year = item.year || extractYearFromTitle(title);
+  const year = item.year || (item.premiered ? item.premiered.substring(0, 4) : '') || extractYearFromTitle(title);
   
   // Clean title if it has a year in it and we already have a year value
   const titleWithoutYear = year ? cleanTitleFromYear(title) : title;
@@ -52,13 +60,19 @@ const ContentCard = ({
   // Determine appropriate labels based on content type
   const typeLabel = type === 'movie' ? 'Movie' : 'TV Show';
   
+  // Format the rating to display only one decimal place if it's a number
+  const formattedRating = 
+    item.rating && !isNaN(item.rating) 
+      ? Number(item.rating).toFixed(1) 
+      : item.rating;
+  
   // Function to handle quick play action
   const handleQuickPlay = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Navigate directly to the content player
-    window.location.href = `${routePath}${imdbId}`;
+    // Navigate directly to the content detail page (which has streaming options)
+    window.location.href = `${routePath}${contentId}`;
   };
   
   return (
@@ -66,7 +80,7 @@ const ContentCard = ({
       className={`content-card ${type}-card ${compact ? 'compact' : ''}`} 
       {...additionalProps}
     >
-      <Link to={`${routePath}${imdbId}`} className="content-link">
+      <Link to={contentId ? `${routePath}${contentId}` : '#'} className="content-link">
         <div 
           className="content-poster" 
           style={{ 
@@ -102,8 +116,8 @@ const ContentCard = ({
               <div className="quality-badge">{item.quality}</div>
             )}
             
-            {item.rating && (
-              <div className="rating-badge">⭐ {item.rating}</div>
+            {formattedRating && (
+              <div className="rating-badge">⭐ {formattedRating}</div>
             )}
             
             {/* Show content type badge only if requested */}

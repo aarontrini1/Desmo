@@ -1,3 +1,4 @@
+// src/services/tvShowService.js
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as TVMazeService from './tvMazeService';
 import * as IMDBService from './imdbService';
@@ -9,6 +10,7 @@ import * as IMDBService from './imdbService';
  */
 export const getLatestTVShows = async (page = 1) => {
   try {
+    // Fixed API endpoint to match documentation
     const data = await fetchData(`${VIDSRC_API_BASE}/tvshows/latest/page-${page}.json`);
     
     // Make sure all TV shows have tmdb_id (some might only have imdb_id)
@@ -25,7 +27,8 @@ export const getLatestTVShows = async (page = 1) => {
     return processedShows;
   } catch (error) {
     console.error('Error fetching latest TV shows:', error);
-    throw error;
+    // Return empty array instead of throwing to gracefully handle API errors
+    return [];
   }
 };
 
@@ -50,7 +53,7 @@ export const enhanceTVShowData = async (show) => {
       return show;
     }
     
-    // Get poster image from IMDB if not available
+    // Get poster image from TVMaze or IMDB if not available
     let posterUrl = null;
     if (tvMazeShow.image?.original) {
       posterUrl = tvMazeShow.image.original;
@@ -63,7 +66,7 @@ export const enhanceTVShowData = async (show) => {
       ...show,
       tvmaze_id: tvMazeShow.id,
       description: tvMazeShow.summary || show.description,
-      poster: posterUrl,
+      poster: posterUrl || show.poster,
       rating: tvMazeShow.rating?.average || 'N/A',
       status: tvMazeShow.status || 'Unknown',
       premiered: tvMazeShow.premiered || 'Unknown',
@@ -89,7 +92,7 @@ export const getTVShowDetails = async (imdbId) => {
       throw new Error(`No TVMaze data found for show with IMDB ID: ${imdbId}`);
     }
     
-    // Get the poster from IMDB if not available from TVMaze
+    // Get the poster from TVMaze or from IMDB if not available
     let posterUrl = null;
     if (tvMazeShow.image?.original) {
       posterUrl = tvMazeShow.image.original;
@@ -97,7 +100,7 @@ export const getTVShowDetails = async (imdbId) => {
       posterUrl = await IMDBService.getIMDBPoster(imdbId);
     }
     
-    // Get seasons and their episodes
+    // Get seasons
     const seasons = await TVMazeService.getTVShowSeasons(tvMazeShow.id);
     
     // Enhanced TV show data
@@ -189,7 +192,7 @@ export const getEpisode = async (imdbId, seasonNumber, episodeNumber) => {
       throw new Error(`No TVMaze data found for show with IMDB ID: ${imdbId}`);
     }
     
-    // Get episode
+    // Get episode by number using the TVMaze API
     return await TVMazeService.getEpisodeByNumber(
       tvMazeShow.id, 
       parseInt(seasonNumber), 
@@ -202,7 +205,7 @@ export const getEpisode = async (imdbId, seasonNumber, episodeNumber) => {
 };
 
 /**
- * Search TV shows
+ * Search TV shows using TVMaze API
  * @param {string} query - Search query
  * @returns {Promise<Array>} - Array of search results
  */

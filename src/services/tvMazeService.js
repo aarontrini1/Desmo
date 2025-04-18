@@ -1,3 +1,4 @@
+// src/services/tvMazeService.js
 import { fetchData, TVMAZE_API_BASE } from './api';
 
 /**
@@ -39,18 +40,10 @@ export const getTVShowDetails = async (id) => {
  */
 export const getTVShowByExternalId = async (imdbId) => {
   try {
-    // Redirect to the show's main entry using the lookup endpoint
-    const response = await fetch(`${TVMAZE_API_BASE}/lookup/shows?imdb=${imdbId}`, {
-      redirect: 'follow'
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to lookup show: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data;
+    // Using the lookup endpoint as documented in TVMaze API
+    return await fetchData(`${TVMAZE_API_BASE}/lookup/shows?imdb=${imdbId}`);
   } catch (error) {
+    // If the show is not found, TVMaze returns a 404, which is handled in fetchData
     console.error('Error fetching TV show by external ID:', error);
     return null;
   }
