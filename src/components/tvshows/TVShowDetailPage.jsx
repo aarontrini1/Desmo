@@ -16,25 +16,34 @@ const TVShowDetailPage = ({ tvShows }) => {
   const [seasons, setSeasons] = useState([]);
   const [episodes, setEpisodes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState("Loading TV show details...");
   
   const tvShow = tvShows.find(show => show.imdb_id === id);
   
   // Function to load episodes for a specific season
   const loadEpisodes = async (imdbId, seasonNumber) => {
     try {
-      setLoading(true);
+      setLoadingEpisodes(true);
       const episodesData = await getSeasonEpisodes(imdbId, seasonNumber);
       setEpisodes(episodesData);
-      setLoading(false);
+      setLoadingEpisodes(false);
     } catch (err) {
       console.error(`Error loading episodes for season ${seasonNumber}:`, err);
       setError(`Failed to load episodes for season ${seasonNumber}.`);
-      setLoading(false);
+      setLoadingEpisodes(false);
     }
   };
   
   useEffect(() => {
+    // Set up a loading timer to update loading message after delay
+    const loadingTimer = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Still loading... The server might be responding slowly.");
+      }
+    }, 3000);
+    
     // Function to load TV show details from TVMaze
     const loadTVShowDetails = async () => {
       try {
@@ -79,6 +88,10 @@ const TVShowDetailPage = ({ tvShows }) => {
     if (id) {
       loadTVShowDetails();
     }
+    
+    return () => {
+      clearTimeout(loadingTimer);
+    };
   }, [id]);
   
   // When selected season changes, load episodes for that season
@@ -86,14 +99,18 @@ const TVShowDetailPage = ({ tvShows }) => {
     if (id && selectedSeason && !loading) {
       loadEpisodes(id, selectedSeason);
     }
-  }, [selectedSeason, id]);
+  }, [selectedSeason, id, loading]);
+  
+  if (!tvShow && !tvShowData && loading) {
+    return <Loading message={loadingMessage} />;
+  }
+  
+  if (!tvShow && !tvShowData && error) {
+    return <Error message={error} />;
+  }
   
   if (!tvShow && !tvShowData) {
     return <Error message="TV Show not found" />;
-  }
-  
-  if (loading && !episodes.length) {
-    return <Loading />;
   }
   
   // Use TVMaze data if available, otherwise fall back to the basic data
@@ -186,7 +203,7 @@ const TVShowDetailPage = ({ tvShows }) => {
           )}
         </div>
         
-        {loading ? (
+        {loadingEpisodes ? (
           <div className="episodes-loading">
             <Loading message="Loading episodes..." />
           </div>

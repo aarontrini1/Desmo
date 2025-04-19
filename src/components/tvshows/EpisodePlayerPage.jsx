@@ -15,6 +15,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
   const [tvShowDetails, setTVShowDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState("Loading episode details...");
   
   const tvShow = tvShows.find(show => show.imdb_id === id);
   
@@ -22,6 +23,13 @@ const EpisodePlayerPage = ({ tvShows }) => {
   const episodeNum = Number(episodeNumber);
   
   useEffect(() => {
+    // Set up a loading timer to update loading message after delay
+    const loadingTimer = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Still loading... The server might be responding slowly.");
+      }
+    }, 3000);
+    
     const loadData = async () => {
       try {
         setLoading(true);
@@ -52,14 +60,18 @@ const EpisodePlayerPage = ({ tvShows }) => {
     };
     
     loadData();
+    
+    return () => {
+      clearTimeout(loadingTimer);
+    };
   }, [id, season, episodeNum]);
+  
+  if (loading) {
+    return <Loading message={loadingMessage} />;
+  }
   
   if (!tvShow && !tvShowDetails) {
     return <Error message="TV Show not found" />;
-  }
-  
-  if (loading) {
-    return <Loading />;
   }
   
   if (!episode) {
@@ -166,7 +178,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
       
       <div className="episode-navigation">
         <button 
-          className="nav-button"
+          className="nav-button prev-button"
           onClick={() => navigate(`/tvshow/${id}/season/${season}/episode/${prevEpisodeNumber}`)}
           disabled={isFirstEpisode}
         >
@@ -174,7 +186,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
         </button>
         
         <button 
-          className="nav-button"
+          className="nav-button next-button"
           onClick={() => navigate(`/tvshow/${id}/season/${season}/episode/${nextEpisodeNumber}`)}
           disabled={isLastEpisode}
         >

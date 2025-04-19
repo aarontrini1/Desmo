@@ -1,3 +1,5 @@
+// src/utils/helpers.js
+
 // Utility function to generate a placeholder color
 export const generatePlaceholderColor = (title) => {
   let hash = 0;
@@ -10,11 +12,13 @@ export const generatePlaceholderColor = (title) => {
 
 // Extract year from title
 export const extractYearFromTitle = (title) => {
+  if (!title) return '';
   return title.match(/\b(19|20)\d{2}\b/)?.[0] || '';
 };
 
 // Clean title by removing year
 export const cleanTitleFromYear = (title) => {
+  if (!title) return '';
   return title.replace(/\s*\b(19|20)\d{2}\b\s*/, '');
 };
 
@@ -36,6 +40,27 @@ export const formatRuntime = (runtime) => {
   }
   
   return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
+};
+
+// Parse PT2H18M format to minutes
+export const parseDuration = (durationStr) => {
+  if (!durationStr) return null;
+  
+  let minutes = 0;
+  
+  // Extract hours
+  const hoursMatch = durationStr.match(/(\d+)H/);
+  if (hoursMatch && hoursMatch[1]) {
+    minutes += parseInt(hoursMatch[1]) * 60;
+  }
+  
+  // Extract minutes
+  const minutesMatch = durationStr.match(/(\d+)M/);
+  if (minutesMatch && minutesMatch[1]) {
+    minutes += parseInt(minutesMatch[1]);
+  }
+  
+  return minutes || null;
 };
 
 // Format date to readable string

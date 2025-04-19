@@ -1,7 +1,7 @@
 // src/components/movies/MovieDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
+import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear, formatRuntime } from '../../utils/helpers';
 import { getMovieDetails, enhanceMovieData } from '../../services/movieService';
 import { streamingServers } from '../../services/api';
 import Loading from '../common/Loading';
@@ -12,15 +12,25 @@ const MovieDetailPage = ({ movies }) => {
   const navigate = useNavigate();
   const [selectedServer, setSelectedServer] = useState("server1");
   const [movieData, setMovieData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState("Loading movie details...");
   
+  // Find movie in our existing list (if available)
   const movie = movies.find(m => m.imdb_id === id);
   
   useEffect(() => {
+    // Set up a loading timer to update loading message after delay
+    const loadingTimer = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Still loading... The server might be responding slowly.");
+      }
+    }, 3000);
+    
     const loadMovieDetails = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // First try to enhance the basic movie data we already have
         if (movie) {
@@ -39,7 +49,7 @@ const MovieDetailPage = ({ movies }) => {
         setLoading(false);
       } catch (err) {
         console.error('Error loading movie details:', err);
-        setError('Failed to load movie details.');
+        setError('Failed to load movie details. Please try again.');
         setLoading(false);
       }
     };
@@ -47,14 +57,25 @@ const MovieDetailPage = ({ movies }) => {
     if (id) {
       loadMovieDetails();
     }
+    
+    return () => {
+      clearTimeout(loadingTimer);
+    };
   }, [id, movie]);
   
-  if (!movie && !movieData) {
-    return <Error message="Movie not found" />;
+  // Show loading state with animation
+  if (loading) {
+    return <Loading message={loadingMessage} />;
   }
   
-  if (loading && !movieData) {
-    return <Loading />;
+  // Show error state if no movie data found
+  if (!movie && !movieData && error) {
+    return <Error message={error} />;
+  }
+  
+  // Show generic error if no data and no specific error
+  if (!movie && !movieData) {
+    return <Error message="Movie not found" />;
   }
   
   // Use enhanced data if available, otherwise fall back to the basic data
@@ -65,6 +86,16 @@ const MovieDetailPage = ({ movies }) => {
   
   // Clean title if needed
   const titleWithoutYear = displayData.title || cleanTitleFromYear(movie?.title || '');
+  
+  // Format runtime from minutes to hours and minutes if needed
+  const runtime = typeof displayData.runtime === 'number' 
+    ? formatRuntime(displayData.runtime) 
+    : displayData.runtime;
+  
+  // Format actors for display
+  const actorsDisplay = displayData.actors && Array.isArray(displayData.actors)
+    ? displayData.actors.join(', ')
+    : '';
   
   // Placeholder color for poster background
   const placeholderColor = generatePlaceholderColor(titleWithoutYear);
@@ -123,10 +154,18 @@ const MovieDetailPage = ({ movies }) => {
                 {displayData?.rating && (
                   <span className="rating">⭐ {displayData.rating}</span>
                 )}
-                {displayData?.runtime && (
-                  <span className="duration">{displayData.runtime}</span>
+                {runtime && (
+                  <span className="duration">{runtime}</span>
                 )}
               </div>
+              
+              {/* Display cast information if available */}
+              {actorsDisplay && (
+                <div className="cast-info">
+                  <span className="cast-label">Cast: </span>
+                  <span className="cast-names">{actorsDisplay}</span>
+                </div>
+              )}
               
               {displayData.genres && displayData.genres.length > 0 && (
                 <div className="genres">

@@ -6,6 +6,9 @@ const Error = ({ message = 'Something went wrong.' }) => {
       <div className="error-icon">⚠️</div>
       <h2>Error</h2>
       <p>{message}</p>
+      <button onClick={() => window.location.reload()} className="retry-button">
+        Try Again
+      </button>
     </div>
   );
 };

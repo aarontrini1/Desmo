@@ -34,8 +34,22 @@ function App() {
   const [tvShows, setTvShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState("Loading content...");
 
   useEffect(() => {
+    // Set up a loading timer to update messages after delays
+    const shortTimer = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Still loading content...");
+      }
+    }, 3000);
+    
+    const longTimer = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Loading is taking longer than expected. Please be patient...");
+      }
+    }, 8000);
+    
     const fetchContent = async () => {
       try {
         setLoading(true);
@@ -89,6 +103,12 @@ function App() {
     };
     
     fetchContent();
+    
+    // Clear timers on unmount
+    return () => {
+      clearTimeout(shortTimer);
+      clearTimeout(longTimer);
+    };
   }, []);
 
   // Show loading screen only during initial load
@@ -97,7 +117,7 @@ function App() {
       <div className="app">
         <Header />
         <main>
-          <Loading message="Loading content..." />
+          <Loading message={loadingMessage} />
         </main>
         <Footer />
       </div>

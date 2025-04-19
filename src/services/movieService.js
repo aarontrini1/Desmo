@@ -1,6 +1,7 @@
 // src/services/movieService.js
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as IMDBService from './imdbService';
+import { extractYearFromTitle } from '../utils/helpers';
 
 /**
  * Get latest movies from VidSrc API
@@ -52,11 +53,11 @@ export const enhanceMovieData = async (movie) => {
       return movie;
     }
     
-    // Get poster from IMDB
-    const posterUrl = await IMDBService.getIMDBPoster(movie.imdb_id);
+    // Get poster from IMDB if needed
+    const posterUrl = !movie.poster ? await IMDBService.getIMDBPoster(movie.imdb_id) : movie.poster;
     
     // Try to get trailer
-    const trailerUrl = await IMDBService.getIMDBTrailer(movie.imdb_id);
+    const trailerUrl = imdbDetails.trailer || null;
     
     // Combine the data
     return {
@@ -68,6 +69,7 @@ export const enhanceMovieData = async (movie) => {
       year: imdbDetails.year || extractYearFromTitle(movie.title),
       genres: imdbDetails.genres || [],
       runtime: imdbDetails.runtime || 'N/A',
+      actors: imdbDetails.actors || []
     };
   } catch (error) {
     console.error('Error enhancing movie data:', error);
@@ -93,36 +95,26 @@ export const getMovieDetails = async (imdbId) => {
       throw new Error(`No IMDB data found for movie with IMDB ID: ${imdbId}`);
     }
     
-    // Get poster from IMDB
-    const posterUrl = await IMDBService.getIMDBPoster(imdbId);
+    // Get poster from IMDB if not already included
+    const posterUrl = imdbDetails.poster || await IMDBService.getIMDBPoster(imdbId);
     
     // Return movie data
     return {
       imdb_id: imdbId,
       title: imdbDetails.title || 'Unknown Title',
       description: imdbDetails.description || 'No description available',
-      poster: posterUrl || imdbDetails.poster,
-      trailer: imdbDetails.trailer,
+      poster: posterUrl || null,
+      trailer: imdbDetails.trailer || null,
       rating: imdbDetails.rating || 'N/A',
       year: imdbDetails.year || '',
       genres: imdbDetails.genres || ['Action'],
       runtime: imdbDetails.runtime || 'N/A',
+      actors: imdbDetails.actors || []
     };
   } catch (error) {
     console.error('Error fetching movie details:', error);
     return null;
   }
-};
-
-/**
- * Extract year from movie title
- * @param {string} title - Movie title
- * @returns {string} - Extracted year or empty string
- */
-const extractYearFromTitle = (title) => {
-  if (!title) return '';
-  const match = title.match(/\b(19|20)\d{2}\b/);
-  return match ? match[0] : '';
 };
 
 /**
@@ -174,10 +166,9 @@ export const searchMovies = async (query) => {
         rating: movie.rating || '',
         year: movie.year || '',
         genres: movie.genres || ['Action'],
-        quality: 'HD' // Default value
+        quality: 'HD', // Default value
+        actors: movie.actors || []
       };
-      
-      console.log(`Standardized movie ${index}:`, standardizedMovie);
       
       return standardizedMovie;
     });
