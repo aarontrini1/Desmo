@@ -1,10 +1,11 @@
-// src/components/tvshows/EpisodePlayerPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, getTVShowDetails, getSeasonEpisodes } from '../../services/tvShowService';
 import { streamingServers } from '../../services/api';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
+import BackButton from '../common/BackButton';
+import { scrollToTop } from '../../utils/scrollUtils';
 
 const EpisodePlayerPage = ({ tvShows }) => {
   const { id, seasonNumber, episodeNumber } = useParams();
@@ -21,6 +22,11 @@ const EpisodePlayerPage = ({ tvShows }) => {
   
   const season = Number(seasonNumber);
   const episodeNum = Number(episodeNumber);
+  
+  // Scroll to top on component mount
+  useEffect(() => {
+    scrollToTop();
+  }, []);
   
   useEffect(() => {
     // Set up a loading timer to update loading message after delay
@@ -120,12 +126,30 @@ const EpisodePlayerPage = ({ tvShows }) => {
     return { __html: htmlContent || 'No description available.' };
   };
   
+  // Navigation function for previous episode
+  const goToPreviousEpisode = () => {
+    if (prevEpisodeNumber) {
+      scrollToTop();
+      navigate(`/tvshow/${id}/season/${season}/episode/${prevEpisodeNumber}`);
+    }
+  };
+  
+  // Navigation function for next episode
+  const goToNextEpisode = () => {
+    if (nextEpisodeNumber) {
+      scrollToTop();
+      navigate(`/tvshow/${id}/season/${season}/episode/${nextEpisodeNumber}`);
+    }
+  };
+  
   return (
     <div className="episode-player-page">
       <div className="detail-header">
-        <button onClick={() => navigate(`/tvshow/${id}`)} className="back-button">
-          ← Back to Show
-        </button>
+        {/* Use BackButton with fallback to TV show page */}
+        <BackButton 
+          fallbackPath={`/tvshow/${id}`}
+          label="← Back to Show"
+        />
       </div>
       
       <div className="episode-info">
@@ -179,7 +203,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
       <div className="episode-navigation">
         <button 
           className="nav-button prev-button"
-          onClick={() => navigate(`/tvshow/${id}/season/${season}/episode/${prevEpisodeNumber}`)}
+          onClick={goToPreviousEpisode}
           disabled={isFirstEpisode}
         >
           ← Previous Episode
@@ -187,7 +211,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
         
         <button 
           className="nav-button next-button"
-          onClick={() => navigate(`/tvshow/${id}/season/${season}/episode/${nextEpisodeNumber}`)}
+          onClick={goToNextEpisode}
           disabled={isLastEpisode}
         >
           Next Episode →

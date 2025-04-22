@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
@@ -12,6 +11,7 @@ import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import Loading from './components/common/Loading';
 import Error from './components/common/Error';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Home components
 import HomePage from './components/home/HomePage';
@@ -140,6 +140,8 @@ function App() {
   return (
     <div className="app">
       <Header />
+      {/* Add the ScrollToTop component here to reset scroll position on route changes */}
+      <ScrollToTop />
 
       <main>
         <Routes>

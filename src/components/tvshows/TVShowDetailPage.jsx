@@ -1,16 +1,16 @@
-// src/components/tvshows/TVShowDetailPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
 import { getTVShowDetails, getTVShowSeasons, getSeasonEpisodes } from '../../services/tvShowService';
 import SeasonSelector from './SeasonSelector';
 import EpisodeCard from './EpisodeCard';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
+import BackButton from '../common/BackButton';
+import { scrollToTop } from '../../utils/scrollUtils';
 
 const TVShowDetailPage = ({ tvShows }) => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [tvShowData, setTVShowData] = useState(null);
   const [seasons, setSeasons] = useState([]);
@@ -21,6 +21,11 @@ const TVShowDetailPage = ({ tvShows }) => {
   const [loadingMessage, setLoadingMessage] = useState("Loading TV show details...");
   
   const tvShow = tvShows.find(show => show.imdb_id === id);
+  
+  // Scroll to top on component mount
+  useEffect(() => {
+    scrollToTop();
+  }, []);
   
   // Function to load episodes for a specific season
   const loadEpisodes = async (imdbId, seasonNumber) => {
@@ -139,9 +144,11 @@ const TVShowDetailPage = ({ tvShows }) => {
   return (
     <div className="detail-page">
       <div className="detail-header">
-        <button onClick={() => navigate(-1)} className="back-button">
-          ← Back
-        </button>
+        {/* Use improved BackButton component with fallback to homepage */}
+        <BackButton 
+          fallbackPath="/" 
+          label="← Back"
+        />
       </div>
       
       <div className="detail-container">

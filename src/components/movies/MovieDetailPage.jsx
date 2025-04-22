@@ -1,4 +1,3 @@
-// src/components/movies/MovieDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear, formatRuntime } from '../../utils/helpers';
@@ -18,6 +17,13 @@ const MovieDetailPage = ({ movies }) => {
   
   // Find movie in our existing list (if available)
   const movie = movies.find(m => m.imdb_id === id);
+  
+  // Handle back button and scroll to top
+  const handleBackButton = () => {
+    // Force scroll to top before navigating back
+    window.scrollTo(0, 0);
+    navigate(-1);
+  };
   
   useEffect(() => {
     // Set up a loading timer to update loading message after delay
@@ -127,7 +133,7 @@ const MovieDetailPage = ({ movies }) => {
   return (
     <div className="detail-page">
       <div className="detail-header">
-        <button onClick={() => navigate(-1)} className="back-button">
+        <button onClick={handleBackButton} className="back-button">
           ← Back
         </button>
       </div>

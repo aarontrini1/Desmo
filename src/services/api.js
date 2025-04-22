@@ -1,6 +1,4 @@
-// src/services/api.js
-
-// Base API URLs - Updated to match documentation
+// Base API URLs
 const VIDSRC_API_BASE = 'https://vidsrc.xyz';
 const TVMAZE_API_BASE = 'https://api.tvmaze.com';
 const IMDB_API_BASE = 'https://imdb.iamidiotareyoutoo.com';
@@ -67,7 +65,7 @@ export const streamingServers = {
     },
     { 
       id: 'server3', 
-      name: 'Embed.su', 
+      name: 'Embed', 
       getUrl: (imdbId, tmdbId) => {
         // Embed.su can use either tmdbId or imdbId according to docs
         const id = tmdbId || imdbId;
