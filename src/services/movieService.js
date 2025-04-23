@@ -1,4 +1,3 @@
-// src/services/movieService.js
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as IMDBService from './imdbService';
 import { extractYearFromTitle } from '../utils/helpers';
@@ -139,23 +138,28 @@ export const searchMovies = async (query) => {
     
     console.log(`Got ${results.length} raw results from IMDB`);
     
-    // Filter to only include movies (not TV shows)
+    // Filter to only include movies with a more strict check
     const movieResults = results.filter(item => {
-      // Consider an item a movie if any of these conditions are true
-      const isMovie = 
+      // Consider an item a movie ONLY if one of these conditions is met:
+      return (
         // Explicitly marked as a movie
         item.type === 'movie' || 
-        // Not marked as anything and doesn't have TV series info
-        (!item.type && !item.tvSeriesInfo) ||
-        // Has an IMDB ID (tt prefix) and is not explicitly a TV show
-        (item.id && item.id.startsWith('tt') && (!item.type || item.type !== 'tvshow'));
-      
-      return isMovie;
+        // Not explicitly marked as a TV show
+        (item.type !== 'tvshow' && 
+         // AND doesn't have TV series info
+         !item.tvSeriesInfo &&
+         // AND title doesn't contain TV show indicators
+         !(item.title && 
+           (item.title.toLowerCase().includes('tv series') || 
+            item.title.toLowerCase().includes('tv show') ||
+            item.title.toLowerCase().includes('season')))
+        )
+      );
     });
     
     console.log(`Filtered to ${movieResults.length} movie results`);
     
-    // Map to a standardized format - preserving values exactly as they are
+    // Map to a standardized format
     const standardizedResults = movieResults.map((movie, index) => {
       // Create the standardized movie object with exactly the properties needed
       const standardizedMovie = {
@@ -167,7 +171,8 @@ export const searchMovies = async (query) => {
         year: movie.year || '',
         genres: movie.genres || ['Action'],
         quality: 'HD', // Default value
-        actors: movie.actors || []
+        actors: movie.actors || [],
+        type: 'movie' // Explicitly mark as movie
       };
       
       return standardizedMovie;

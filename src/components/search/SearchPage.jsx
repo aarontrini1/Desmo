@@ -1,4 +1,3 @@
-// src/components/search/SearchPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ContentCard from '../shared/ContentCard';
@@ -37,25 +36,57 @@ const SearchPage = () => {
           searchTVShows(query)
         ]);
         
-        console.log('Movie search results:', moviesData?.length || 0);
-        console.log('TV show search results:', tvShowsData?.length || 0);
+        console.log('Raw movie search results:', moviesData?.length || 0);
+        console.log('Raw TV show search results:', tvShowsData?.length || 0);
         
-        // Make sure IDs are present
-        const processedMovies = (moviesData || []).map((movie, index) => {
-          if (!movie.imdb_id && !movie.id) {
-            // If no ID is present, add a random one to avoid display issues
-            movie.id = `movie-${index}-${Date.now()}`;
-          }
-          return movie;
+        // Create a mapping of ID to full content
+        const idContentMap = {};
+        
+        // Track which IDs belong to which type
+        const movieIds = new Set();
+        const tvShowIds = new Set();
+        
+        // Process movies first
+        (moviesData || []).forEach((movie, index) => {
+          const id = movie.imdb_id || movie.id || `movie-${index}-${Date.now()}`;
+          movieIds.add(id);
+          idContentMap[id] = {
+            ...movie,
+            id,
+            imdb_id: movie.imdb_id || id,
+            title: movie.title || movie.name || '',
+            quality: movie.quality || 'HD',
+            type: 'movie'
+          };
         });
         
-        const processedTVShows = (tvShowsData || []).map((show, index) => {
-          if (!show.imdb_id && !show.id) {
-            // If no ID is present, add a random one to avoid display issues
-            show.id = `tvshow-${index}-${Date.now()}`;
+        // Process TV shows
+        (tvShowsData || []).forEach((show, index) => {
+          const id = show.imdb_id || show.id || `tvshow-${index}-${Date.now()}`;
+          tvShowIds.add(id);
+          // If this ID already exists in movies, we need to decide where it belongs
+          if (idContentMap[id]) {
+            // If it's in TVMaze API results, it's definitely a TV show
+            // So we'll remove it from movies and add to TV Shows
+            movieIds.delete(id);
           }
-          return show;
+          
+          idContentMap[id] = {
+            ...show,
+            id,
+            imdb_id: show.imdb_id || id,
+            title: show.title || show.name || '',
+            quality: show.quality || 'HD',
+            type: 'tvshow'
+          };
         });
+        
+        // Build the final lists based on our sets
+        const processedMovies = Array.from(movieIds).map(id => idContentMap[id]);
+        const processedTVShows = Array.from(tvShowIds).map(id => idContentMap[id]);
+        
+        console.log('Final processed movie results:', processedMovies.length);
+        console.log('Final processed TV show results:', processedTVShows.length);
         
         // Update the search results
         setSearchResults({
@@ -166,12 +197,8 @@ const SearchPage = () => {
           <div className="content-grid">
             {limitedMovies.map((movie, index) => (
               <ContentCard 
-                key={movie.imdb_id || movie.id || `movie-${index}-${Date.now()}`} 
-                item={{
-                  ...movie,
-                  title: movie.title || movie.name || '',
-                  quality: movie.quality || 'HD'
-                }} 
+                key={`movie-${movie.imdb_id || movie.id || index}`} 
+                item={movie} 
                 type="movie" 
                 showTypeBadge={activeFilter === 'all'}
               />
@@ -189,12 +216,8 @@ const SearchPage = () => {
           <div className="content-grid">
             {limitedTvShows.map((show, index) => (
               <ContentCard 
-                key={show.imdb_id || show.id || `tvshow-${index}-${Date.now()}`} 
-                item={{
-                  ...show,
-                  title: show.title || show.name || '',
-                  quality: show.quality || 'HD'
-                }} 
+                key={`tvshow-${show.imdb_id || show.id || index}`} 
+                item={show} 
                 type="tvshow" 
                 showTypeBadge={activeFilter === 'all'}
               />

@@ -1,4 +1,3 @@
-// src/services/tvShowService.js
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as TVMazeService from './tvMazeService';
 import * as IMDBService from './imdbService';
@@ -21,6 +20,8 @@ export const getLatestTVShows = async (page = 1) => {
         // Note: in a real app, you might need an API to convert imdb_id to tmdb_id
         show.tmdb_id = show.imdb_id;
       }
+      // Explicitly mark as TV show to help with filtering
+      show.type = 'tvshow';
       return show;
     }) || [];
     
@@ -71,6 +72,7 @@ export const enhanceTVShowData = async (show) => {
       status: tvMazeShow.status || 'Unknown',
       premiered: tvMazeShow.premiered || 'Unknown',
       genres: tvMazeShow.genres || [],
+      type: 'tvshow' // Explicitly mark as TV show
     };
   } catch (error) {
     console.error('Error enhancing TV show data:', error);
@@ -115,6 +117,7 @@ export const getTVShowDetails = async (imdbId) => {
       premiered: tvMazeShow.premiered || 'Unknown',
       genres: tvMazeShow.genres || [],
       seasons: seasons,
+      type: 'tvshow', // Explicitly mark as TV show
       // We don't fetch all episodes at once due to performance concerns
     };
   } catch (error) {
@@ -211,19 +214,38 @@ export const getEpisode = async (imdbId, seasonNumber, episodeNumber) => {
  */
 export const searchTVShows = async (query) => {
   try {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+
+    console.log(`Searching TV shows for: "${query}"`);
     const results = await TVMazeService.searchTVShows(query);
     
-    // Map to a standardized format
-    return results.map(show => ({
-      id: show.id,
-      imdb_id: show.externals?.imdb || null,
-      title: show.name,
-      description: show.summary,
-      poster: show.image?.medium || null,
-      rating: show.rating?.average || 'N/A',
-      premiered: show.premiered || 'Unknown',
-      genres: show.genres || [],
-    }));
+    if (!results || !Array.isArray(results)) {
+      return [];
+    }
+    
+    console.log(`Got ${results.length} TV show results from TVMaze`);
+    
+    // Map to a standardized format and ensure type is set
+    const standardizedResults = results.map(show => {
+      const standardizedShow = {
+        id: show.id,
+        imdb_id: show.externals?.imdb || null,
+        title: show.name,
+        description: show.summary,
+        poster: show.image?.medium || null,
+        rating: show.rating?.average || 'N/A',
+        premiered: show.premiered || 'Unknown',
+        genres: show.genres || [],
+        type: 'tvshow' // Explicitly mark as TV show
+      };
+      
+      return standardizedShow;
+    });
+    
+    console.log(`Returning ${standardizedResults.length} standardized TV show results`);
+    return standardizedResults;
   } catch (error) {
     console.error('Error searching TV shows:', error);
     return [];
