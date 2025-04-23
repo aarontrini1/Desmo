@@ -20,6 +20,12 @@ export const getLatestMovies = async (page = 1) => {
         // Note: in a real app, you might need an API to convert imdb_id to tmdb_id
         movie.tmdb_id = movie.imdb_id;
       }
+      
+      // Ensure every movie has a poster if it has an imdb_id
+      if (movie.imdb_id && !movie.poster) {
+        movie.poster = `https://imdb.iamidiotareyoutoo.com/photo/${movie.imdb_id}`;
+      }
+      
       return movie;
     }) || [];
     
@@ -52,8 +58,8 @@ export const enhanceMovieData = async (movie) => {
       return movie;
     }
     
-    // Get poster from IMDB if needed
-    const posterUrl = !movie.poster ? await IMDBService.getIMDBPoster(movie.imdb_id) : movie.poster;
+    // Direct poster URL for IMDb
+    const posterUrl = `https://imdb.iamidiotareyoutoo.com/photo/${movie.imdb_id}`;
     
     // Try to get trailer
     const trailerUrl = imdbDetails.trailer || null;
@@ -95,7 +101,7 @@ export const getMovieDetails = async (imdbId) => {
     }
     
     // Get poster from IMDB if not already included
-    const posterUrl = imdbDetails.poster || await IMDBService.getIMDBPoster(imdbId);
+    const posterUrl = `https://imdb.iamidiotareyoutoo.com/photo/${imdbId}`;
     
     // Return movie data
     return {
@@ -161,12 +167,15 @@ export const searchMovies = async (query) => {
     
     // Map to a standardized format
     const standardizedResults = movieResults.map((movie, index) => {
+      // Add direct poster URL for each movie with an ID
+      const posterUrl = movie.id ? `https://imdb.iamidiotareyoutoo.com/photo/${movie.id}` : '';
+      
       // Create the standardized movie object with exactly the properties needed
       const standardizedMovie = {
         imdb_id: movie.id || '',
         title: movie.title || '',
         description: movie.description || 'No description available',
-        poster: movie.poster || '',
+        poster: posterUrl,
         rating: movie.rating || '',
         year: movie.year || '',
         genres: movie.genres || ['Action'],

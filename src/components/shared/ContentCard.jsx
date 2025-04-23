@@ -1,20 +1,7 @@
-// src/components/shared/ContentCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { generatePlaceholderColor, extractYearFromTitle, cleanTitleFromYear } from '../../utils/helpers';
 
-/**
- * ContentCard component
- * 
- * A flexible card component that works for both movies and TV shows.
- * It displays basic information like title, year, and quality.
- * 
- * @param {Object} item - The movie or TV show object
- * @param {string} type - Either "movie" or "tvshow" to determine routing
- * @param {boolean} showTypeBadge - Whether to show the type badge (default: false)
- * @param {boolean} compact - Whether to use a compact view (default: false)
- * @param {Object} additionalProps - Any additional props to pass to the component
- */
 const ContentCard = ({ 
   item, 
   type, 
@@ -34,7 +21,6 @@ const ContentCard = ({
   if (!imdbId) {
     console.warn('ContentCard: Missing IMDB ID', item);
     // We'll generate a random ID for display purposes when none exists
-    // This prevents failing to display valid content just because it lacks an ID
     const randomId = `temp-${Math.random().toString(36).substring(2, 15)}`;
     item.temp_id = randomId;
   }
@@ -66,12 +52,23 @@ const ContentCard = ({
       ? Number(item.rating).toFixed(1) 
       : item.rating;
   
+  // Get the poster URL with proper fallbacks
+  let posterUrl = item.poster;
+  
+  // For TV shows, handle nested image structure from TVMaze
+  if (!posterUrl && type === 'tvshow' && item.image) {
+    posterUrl = item.image.original || item.image.medium;
+  }
+  
+  // For movies without a poster, use the IMDb API
+  if (!posterUrl && type === 'movie' && imdbId && imdbId.startsWith('tt')) {
+    posterUrl = `https://imdb.iamidiotareyoutoo.com/photo/${imdbId}`;
+  }
+  
   // Function to handle quick play action
   const handleQuickPlay = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Navigate directly to the content detail page (which has streaming options)
     window.location.href = `${routePath}${contentId}`;
   };
   
@@ -85,12 +82,12 @@ const ContentCard = ({
           className="content-poster" 
           style={{ 
             backgroundColor: placeholderColor,
-            backgroundImage: item.poster ? `url(${item.poster})` : 'none',
+            backgroundImage: posterUrl ? `url(${posterUrl})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
         >
-          {!item.poster && (
+          {!posterUrl && (
             <div className="poster-text">{titleWithoutYear.charAt(0)}</div>
           )}
           

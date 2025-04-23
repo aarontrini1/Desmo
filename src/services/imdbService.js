@@ -1,4 +1,3 @@
-// src/services/imdbService.js
 import { fetchData, IMDB_API_BASE } from './api';
 import { parseDuration } from '../utils/helpers';
 
@@ -215,25 +214,8 @@ export const getIMDBPoster = async (imdbId) => {
     // Clean the IMDB ID if needed
     const cleanImdbId = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
     
-    // First try to get the poster from the IMDB API
-    try {
-      const url = `${IMDB_API_BASE}/search?tt=${cleanImdbId}`;
-      const response = await fetch(url);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Check if we have an image in the short field
-        if (data?.short?.image) {
-          return data.short.image;
-        }
-      }
-    } catch (error) {
-      console.warn('Error fetching poster from IMDB API:', error);
-    }
-    
-    // Fallback to OMDB API for posters
-    return `https://img.omdbapi.com/?apikey=a937d97e&i=${cleanImdbId}&h=600`;
+    // Use the direct photo endpoint from the IMDb API
+    return `https://imdb.iamidiotareyoutoo.com/photo/${cleanImdbId}`;
   } catch (error) {
     console.error('Error fetching IMDB poster:', error);
     return null;
