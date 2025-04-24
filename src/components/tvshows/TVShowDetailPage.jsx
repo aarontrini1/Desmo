@@ -176,9 +176,7 @@ const TVShowDetailPage = ({ tvShows }) => {
                 {seasons.length > 0 && (
                   <span className="seasons">{seasons.length} Seasons</span>
                 )}
-                {displayData.status && (
-                  <span className="status">{displayData.status}</span>
-                )}
+                {/* Removed status field display */}
               </div>
               
               {displayData.genres && displayData.genres.length > 0 && (

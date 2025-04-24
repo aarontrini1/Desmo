@@ -65,6 +65,11 @@ const ContentCard = ({
     posterUrl = `https://imdb.iamidiotareyoutoo.com/photo/${imdbId}`;
   }
   
+  // For TV shows without a poster but with an IMDB ID, use the IMDb API
+  if (!posterUrl && type === 'tvshow' && imdbId && imdbId.startsWith('tt')) {
+    posterUrl = `https://imdb.iamidiotareyoutoo.com/photo/${imdbId}`;
+  }
+  
   // Function to handle quick play action
   const handleQuickPlay = (e) => {
     e.preventDefault();

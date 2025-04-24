@@ -1,7 +1,7 @@
-// src/utils/helpers.js
-
 // Utility function to generate a placeholder color
 export const generatePlaceholderColor = (title) => {
+  if (!title) return '#444444';
+  
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = title.charCodeAt(i) + ((hash << 5) - hash);
@@ -84,8 +84,9 @@ export const convertTVMazeShow = (tvMazeShow) => {
     rating: tvMazeShow.rating?.average,
     premiered: tvMazeShow.premiered,
     genres: tvMazeShow.genres || [],
-    status: tvMazeShow.status,
-    quality: 'HD' // Default quality
+    // Removing status field
+    quality: 'HD', // Default quality
+    type: 'tvshow' // Explicitly mark as TV show
   };
 };
 

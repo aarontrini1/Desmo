@@ -1,6 +1,7 @@
 import { fetchData, VIDSRC_API_BASE } from './api';
 import * as TVMazeService from './tvMazeService';
 import * as IMDBService from './imdbService';
+import { convertTVMazeShow } from '../utils/helpers';
 
 /**
  * Get latest TV shows from VidSrc API
@@ -20,12 +21,36 @@ export const getLatestTVShows = async (page = 1) => {
         // Note: in a real app, you might need an API to convert imdb_id to tmdb_id
         show.tmdb_id = show.imdb_id;
       }
+      
+      // Ensure every show has a poster if it has an imdb_id
+      if (show.imdb_id && !show.poster) {
+        show.poster = `https://imdb.iamidiotareyoutoo.com/photo/${show.imdb_id}`;
+      }
+      
       // Explicitly mark as TV show to help with filtering
       show.type = 'tvshow';
       return show;
     }) || [];
     
-    return processedShows;
+    // Further enhance TV shows with posters from TVMaze
+    const enhancedShows = await Promise.all(
+      processedShows.map(async (show) => {
+        if (!show.poster && show.imdb_id) {
+          try {
+            // Try to get show from TVMaze by IMDB ID
+            const tvMazeShow = await TVMazeService.getTVShowByExternalId(show.imdb_id);
+            if (tvMazeShow && tvMazeShow.image) {
+              show.poster = tvMazeShow.image.original || tvMazeShow.image.medium;
+            }
+          } catch (error) {
+            console.error(`Failed to get TVMaze poster for ${show.title}:`, error);
+          }
+        }
+        return show;
+      })
+    );
+    
+    return enhancedShows;
   } catch (error) {
     console.error('Error fetching latest TV shows:', error);
     // Return empty array instead of throwing to gracefully handle API errors
@@ -58,6 +83,8 @@ export const enhanceTVShowData = async (show) => {
     let posterUrl = null;
     if (tvMazeShow.image?.original) {
       posterUrl = tvMazeShow.image.original;
+    } else if (tvMazeShow.image?.medium) {
+      posterUrl = tvMazeShow.image.medium;
     } else {
       posterUrl = await IMDBService.getIMDBPoster(show.imdb_id);
     }
@@ -69,7 +96,7 @@ export const enhanceTVShowData = async (show) => {
       description: tvMazeShow.summary || show.description,
       poster: posterUrl || show.poster,
       rating: tvMazeShow.rating?.average || 'N/A',
-      status: tvMazeShow.status || 'Unknown',
+      // Removing status field
       premiered: tvMazeShow.premiered || 'Unknown',
       genres: tvMazeShow.genres || [],
       type: 'tvshow' // Explicitly mark as TV show
@@ -98,6 +125,8 @@ export const getTVShowDetails = async (imdbId) => {
     let posterUrl = null;
     if (tvMazeShow.image?.original) {
       posterUrl = tvMazeShow.image.original;
+    } else if (tvMazeShow.image?.medium) {
+      posterUrl = tvMazeShow.image.medium;
     } else {
       posterUrl = await IMDBService.getIMDBPoster(imdbId);
     }
@@ -105,7 +134,7 @@ export const getTVShowDetails = async (imdbId) => {
     // Get seasons
     const seasons = await TVMazeService.getTVShowSeasons(tvMazeShow.id);
     
-    // Enhanced TV show data
+          // Enhanced TV show data
     return {
       id: tvMazeShow.id,
       imdb_id: imdbId,
@@ -113,7 +142,7 @@ export const getTVShowDetails = async (imdbId) => {
       description: tvMazeShow.summary,
       poster: posterUrl,
       rating: tvMazeShow.rating?.average || 'N/A',
-      status: tvMazeShow.status || 'Unknown',
+      // Removing status field to prevent it from being displayed
       premiered: tvMazeShow.premiered || 'Unknown',
       genres: tvMazeShow.genres || [],
       seasons: seasons,
@@ -234,10 +263,11 @@ export const searchTVShows = async (query) => {
         imdb_id: show.externals?.imdb || null,
         title: show.name,
         description: show.summary,
-        poster: show.image?.medium || null,
+        poster: show.image?.original || show.image?.medium || null,
         rating: show.rating?.average || 'N/A',
         premiered: show.premiered || 'Unknown',
         genres: show.genres || [],
+        // Removing status from search results
         type: 'tvshow' // Explicitly mark as TV show
       };
       
