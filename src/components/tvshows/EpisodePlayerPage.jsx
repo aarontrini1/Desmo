@@ -5,6 +5,7 @@ import { streamingServers } from '../../services/api';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
 import BackButton from '../common/BackButton';
+import VideoPlayer from '../common/VideoPlayer';
 import { scrollToTop } from '../../utils/scrollUtils';
 
 const EpisodePlayerPage = ({ tvShows }) => {
@@ -17,6 +18,7 @@ const EpisodePlayerPage = ({ tvShows }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState("Loading episode details...");
+  const [videoUrl, setVideoUrl] = useState(null);
   
   const tvShow = tvShows.find(show => show.imdb_id === id);
   
@@ -72,6 +74,28 @@ const EpisodePlayerPage = ({ tvShows }) => {
     };
   }, [id, season, episodeNum]);
   
+  // Update video URL when the selected server changes or when the episode data loads
+  useEffect(() => {
+    if (!loading && episode) {
+      const server = streamingServers.tv.find(s => s.id === selectedServer);
+      if (server) {
+        // Get the URL for this server
+        const url = server.getUrl(id, tvShow?.tmdb_id || id, season, episodeNum);
+        
+        // Check if the URL is valid (some servers may require TMDB ID)
+        if (!url) {
+          setError(`The selected server requires a TMDB ID, which is not available for this TV Show.`);
+          setVideoUrl(null);
+          return;
+        }
+        
+        console.log(`Setting URL: ${url}`);
+        setVideoUrl(url);
+        setError(null);
+      }
+    }
+  }, [selectedServer, episode, loading, id, tvShow, season, episodeNum]);
+  
   if (loading) {
     return <Loading message={loadingMessage} />;
   }
@@ -91,23 +115,6 @@ const EpisodePlayerPage = ({ tvShows }) => {
   
   const handleServerSelect = (serverId) => {
     setSelectedServer(serverId);
-  };
-  
-  const handleWatchNow = () => {
-    const server = servers.find(s => s.id === selectedServer);
-    if (server) {
-      // Get the URL for this server
-      const url = server.getUrl(id, tvShow?.tmdb_id || id, season, episodeNum);
-      
-      // Check if the URL is valid (some servers may require TMDB ID)
-      if (!url) {
-        setError(`The selected server requires a TMDB ID, which is not available for this TV Show.`);
-        return;
-      }
-      
-      console.log(`Opening URL: ${url}`);
-      window.open(url, "_blank");
-    }
   };
   
   // Find the current episode's index in the season's episodes
@@ -190,15 +197,16 @@ const EpisodePlayerPage = ({ tvShows }) => {
           </div>
           
           {error && <div className="error-message">{error}</div>}
-          
-          <button 
-            onClick={handleWatchNow}
-            className="watch-now-button"
-          >
-            <span className="play-icon">▶</span> WATCH NOW
-          </button>
         </div>
       </div>
+      
+      {/* Video player section using the VideoPlayer component */}
+      {videoUrl && (
+        <VideoPlayer 
+          src={videoUrl}
+          title={`Now Playing: Season ${season}, Episode ${episodeNum} - ${episode.name}`}
+        />
+      )}
       
       <div className="episode-navigation">
         <button 

@@ -5,6 +5,7 @@ import { getMovieDetails, enhanceMovieData } from '../../services/movieService';
 import { streamingServers } from '../../services/api';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
+import VideoPlayer from '../common/VideoPlayer';
 
 const MovieDetailPage = ({ movies }) => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const MovieDetailPage = ({ movies }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState("Loading movie details...");
+  const [videoUrl, setVideoUrl] = useState(null);
   
   // Find movie in our existing list (if available)
   const movie = movies.find(m => m.imdb_id === id);
@@ -69,6 +71,28 @@ const MovieDetailPage = ({ movies }) => {
     };
   }, [id, movie]);
   
+  // Load initial video URL when component mounts or selectedServer changes
+  useEffect(() => {
+    if (!loading && (movieData || movie)) {
+      const displayData = movieData || movie;
+      const server = streamingServers.movie.find(s => s.id === selectedServer);
+      
+      if (server) {
+        const url = server.getUrl(id, displayData?.tmdb_id || id);
+        
+        if (!url) {
+          setError(`The selected server requires a TMDB ID, which is not available for this movie.`);
+          setVideoUrl(null);
+          return;
+        }
+        
+        console.log(`Setting URL: ${url}`);
+        setVideoUrl(url);
+        setError(null);
+      }
+    }
+  }, [selectedServer, loading, movieData, movie, id]);
+  
   // Show loading state with animation
   if (loading) {
     return <Loading message={loadingMessage} />;
@@ -111,23 +135,6 @@ const MovieDetailPage = ({ movies }) => {
   
   const handleServerSelect = (serverId) => {
     setSelectedServer(serverId);
-  };
-  
-  const handleWatchNow = () => {
-    const server = servers.find(s => s.id === selectedServer);
-    if (server) {
-      // Get the URL for the selected server
-      const url = server.getUrl(id, displayData?.tmdb_id || id);
-      
-      // Check if the URL is valid
-      if (!url) {
-        setError(`The selected server requires a TMDB ID, which is not available for this movie.`);
-        return;
-      }
-      
-      console.log(`Opening URL: ${url}`);
-      window.open(url, "_blank");
-    }
   };
   
   return (
@@ -209,18 +216,19 @@ const MovieDetailPage = ({ movies }) => {
                 </div>
                 
                 {error && <div className="error-message">{error}</div>}
-                
-                <button 
-                  onClick={handleWatchNow}
-                  className="watch-now-button"
-                >
-                  <span className="play-icon">▶</span> WATCH NOW
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Video player section - using the VideoPlayer component */}
+      {videoUrl && (
+        <VideoPlayer 
+          src={videoUrl}
+          title={`Now Playing: ${titleWithoutYear}`}
+        />
+      )}
     </div>
   );
 };
