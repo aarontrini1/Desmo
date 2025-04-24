@@ -791,26 +791,13 @@ main {
   gap: 3rem;
 }
 
-.search-section {
-  margin-bottom: 2rem;
-}
-
 .search-section h2 {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #333;
   padding-bottom: 0.5rem;
 }
 
-.no-results {
-  text-align: center;
-  padding: 3rem;
-  background-color: #1a1a1a;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
 /* Loading and Error States */
-/* Improved loading */
 .loading {
   text-align: center;
   font-size: 1.2rem;
@@ -933,14 +920,94 @@ main {
   border: 1px solid rgba(0, 230, 118, 0.3);
 }
 
-/* Responsive Adjustments */
-@media (max-width: 1280px) {
-  .content-list {
-    grid-template-columns: repeat(4, 1fr);
+/* =====================================
+   RESPONSIVE MEDIA QUERIES
+   - Consolidated and organized by size
+   - Added support for larger screens
+   ===================================== */
+
+/* Extra Large Screens (1921px+) */
+@media (min-width: 1921px) {
+  main {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 2.5rem;
+  }
+  
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2rem;
+  }
+  
+  .detail-content {
+    max-width: 1600px;
+  }
+  
+  .detail-poster {
+    width: 280px;
+    height: 420px;
+  }
+  
+  .detail-info h1 {
+    font-size: 3rem;
+  }
+  
+  .content-meta span {
+    font-size: 1.3rem;
+  }
+  
+  .description {
+    font-size: 1.2rem;
+    max-width: 900px;
+  }
+  
+  .video-player-container {
+    max-width: 1600px;
+    margin: 3rem auto;
+  }
+  
+  .episodes-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  
+  .search-page {
+    max-width: 1100px;
+    margin: 0 auto;
   }
 }
 
-@media (max-width: 900px) {
+/* Tablets and Small Desktops (901px to 1024px) */
+@media (min-width: 901px) and (max-width: 1024px) {
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.3rem;
+  }
+  
+  main {
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+  
+  .detail-content {
+    max-width: 900px;
+  }
+  
+  .detail-poster {
+    width: 200px;
+    height: 300px;
+  }
+  
+  .detail-info h1 {
+    font-size: 2.2rem;
+  }
+}
+
+/* Medium Tablets (769px to 900px) */
+@media (min-width: 769px) and (max-width: 900px) {
   .content-list {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -967,9 +1034,15 @@ main {
   .server-buttons {
     justify-content: center;
   }
+  
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+  }
 }
 
-@media (max-width: 768px) {
+/* Small Tablets and Large Phones (481px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
   .main-header {
     flex-wrap: wrap;
     padding: 1rem;
@@ -1064,30 +1137,358 @@ main {
   }
 }
 
+/* Mobile Phones (up to 480px) */
 @media (max-width: 480px) {
-  .content-list {
-    grid-template-columns: repeat(1, 1fr);
+  /* Layout and container adjustments */
+  main {
+    padding: 1rem;
   }
   
-  .content-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  /* Header adjustments */
+  .main-header {
+    padding: 0.8rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .logo {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .search-bar {
+    width: 100%;
+    max-width: 100%;
+    margin: 0.5rem 0;
+  }
+  
+  .search-bar input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .main-nav {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+  }
+
+  /* Content grids */  
+  .content-list {
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.8rem;
   }
   
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+  
+  /* Content cards */
+  .content-info h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .content-info {
+    padding: 0.7rem;
+  }
+  
+  .quality-badge, .type-badge, .rating-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .year {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  /* Detail page adjustments */
   .detail-info h1 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.7rem;
   }
   
   .content-meta {
-    gap: 1rem;
+    gap: 0.7rem;
+    margin-bottom: 1.2rem;
   }
   
   .content-meta span {
     font-size: 0.9rem;
   }
   
+  .detail-backdrop {
+    padding: 1rem;
+    min-height: 300px;
+  }
+  
+  .detail-poster {
+    width: 130px;
+    height: 195px;
+  }
+  
+  .description {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Server selection */
+  .server-selection h3 {
+    font-size: 1.1rem;
+  }
+  
+  .server-buttons {
+    gap: 0.5rem;
+  }
+  
   .server-button {
     flex: 1 0 100%;
     font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
+  
+  /* Episode page */
+  .episode-info {
+    padding: 1.2rem;
+  }
+  
+  .episode-info h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .episode-info h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .episode-card {
+    padding: 0.8rem;
+  }
+  
+  .episode-number {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .watch-episode-button {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  /* Video player */
+  .video-player-container {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .video-player-container h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  /* Error and loading states */
+  .error, .loading {
+    padding: 1.5rem;
+  }
+  
+  .error h2 {
+    font-size: 1.4rem;
+  }
+  
+  .error p {
+    font-size: 1rem;
+  }
+  
+  .retry-button {
+    padding: 0.6rem 1.5rem;
+  }
+}
+
+/* Large Desktops (1441px to 1920px) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+  main {
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 2.5rem;
+  }
+  
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1.8rem;
+  }
+  
+  .detail-content {
+    max-width: 1400px;
+  }
+  
+  .detail-poster {
+    width: 260px;
+    height: 390px;
+  }
+  
+  .detail-info h1 {
+    font-size: 2.8rem;
+  }
+  
+  .content-meta span {
+    font-size: 1.2rem;
+  }
+  
+  .description {
+    font-size: 1.15rem;
+    max-width: 800px;
+  }
+  
+  .video-player-container {
+    max-width: 1400px;
+    margin: 2.5rem auto;
+  }
+  
+  .episodes-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .search-page {
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  
+  .play-button {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .play-icon {
+    font-size: 1.7rem;
+  }
+}
+
+/* Medium-Large Desktops (1281px to 1440px) */
+@media (min-width: 1281px) and (max-width: 1440px) {
+  main {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.7rem;
+  }
+  
+  .detail-content {
+    max-width: 1200px;
+  }
+  
+  .detail-poster {
+    width: 240px;
+    height: 360px;
+  }
+  
+  .detail-info h1 {
+    font-size: 2.7rem;
+  }
+  
+  .description {
+    max-width: 750px;
+  }
+  
+  .video-player-container {
+    max-width: 1200px;
+    margin: 2.5rem auto;
+  }
+  
+  .episodes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  
+  .episode-card {
+    padding: 1.2rem;
+  }
+  
+  .episode-details h4 {
+    font-size: 1.1rem;
+  }
+  
+  .search-page {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  
+  .search-filters {
+    padding: 1.2rem;
+    gap: 1.2rem;
+  }
+  
+  .filter-button {
+    padding: 0.8rem 1.8rem;
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 1115px) and (max-width: 1280px) {
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.4rem;
+  }
+  
+  .detail-content {
+    max-width: 1000px;
+  }
+  
+  .episodes-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .search-page {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+}
+
+/* Medium Desktops (1025px to 1114px) */
+@media (min-width: 1025px) and (max-width: 1114px) {
+  main {
+    max-width: 1114px;
+    margin: 0 auto;
+  }
+  
+  .content-list, 
+  .content-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.3rem;
+  }
+  
+  .detail-content {
+    max-width: 950px;
+  }
+  
+  .episodes-container {
+    max-width: 950px;
+    margin: 0 auto;
+  }
+  
+  .search-page {
+    max-width: 980px;
+    margin: 0 auto;
   }
 }
